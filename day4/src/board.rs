@@ -1,13 +1,9 @@
-#[derive(Debug, PartialEq)]
-pub struct Cell {
-    value: u64,
-    extracted: bool,
-}
+use std::fmt::{Display, Error, Formatter};
 
-impl Cell {
-    pub fn status(&self) -> (u64, bool) {
-        (self.value, self.extracted)
-    }
+#[derive(Debug, PartialEq, Clone)]
+pub struct Cell {
+    pub value: u64,
+    pub extracted: bool,
 }
 
 impl From<u64> for Cell {
@@ -19,7 +15,14 @@ impl From<u64> for Cell {
     }
 }
 
-#[derive(Debug, PartialEq)]
+impl Display for Cell {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
+        let output = format!("{}{}", self.value, if self.extracted { "*" } else { "" });
+        write!(f, "{:<4}", &output)
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct Board {
     cells: Vec<Cell>,
     pub already_won: bool,
@@ -53,11 +56,11 @@ impl Board {
 
     pub fn extract(&mut self, value: u64) -> bool {
         match self.cells.iter_mut().find(|c| c.value == value) {
+            None => false,
             Some(cell) => {
                 cell.extracted = true;
                 true
             }
-            None => false,
         }
     }
 
@@ -72,8 +75,24 @@ impl Board {
         self.cells
             .iter()
             .filter(|c| !c.extracted)
-            .map(|c| c.value)
-            .sum()
+            .fold(0, |acc, c| acc + c.value)
+    }
+}
+
+impl Display for Board {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
+        let output = self
+            .rows()
+            .iter()
+            .map(|row| {
+                row.iter()
+                    .map(|c| format!("{}", c))
+                    .collect::<Vec<String>>()
+                    .join("")
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+        write!(f, "{}", output)
     }
 }
 
@@ -127,5 +146,33 @@ mod tests {
         extract!(&mut b, 14, 10, 18, 22, 2);
         assert!(b.cells[0].extracted);
         assert!(b.winning());
+    }
+
+    #[test]
+    fn test_calculate_score() {
+        let mut b = test_board();
+        extract!(&mut b, 14, 10, 18, 22, 2);
+        assert_eq!(b.calculate_score(), 259);
+    }
+
+    #[test]
+    fn test_display_cell() {
+        let c = Cell {
+            value: 14,
+            extracted: true,
+        };
+        let output = format!("{}", c);
+        assert_eq!(output, "14* ")
+    }
+
+    #[test]
+    fn test_display_board() {
+        let mut b = test_board();
+        extract!(&mut b, 21, 10, 18, 13);
+        let output = format!("{}", b);
+        assert_eq!(
+            "14  21* 17  24  4   \n10* 16  15  9   19  \n18* 8   23  26  20  \n22  11  13* 6   5   \n2   0   12  3   7   ",
+            &output
+        )
     }
 }

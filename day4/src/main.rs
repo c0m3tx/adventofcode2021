@@ -1,8 +1,8 @@
 mod board;
 use board::Board;
-use board::Cell;
 
 fn main() {
+    first_winner();
     last_winner();
 }
 
@@ -12,7 +12,11 @@ fn first_winner() {
         for board in &mut boards {
             let found = board.extract(e);
             if found && board.winning() {
-                println!("First winner score: {}", board.calculate_score() * e);
+                println!(
+                    "First winner score: {}\n{}\n",
+                    board.calculate_score() * e,
+                    board
+                );
                 return;
             }
         }
@@ -21,18 +25,22 @@ fn first_winner() {
 
 fn last_winner() {
     let mut last_winner = 0;
+    let mut last_board: Option<usize> = None;
+
     let (extractions, mut boards) = load_boards_and_inputs();
     for e in extractions {
-        for board in &mut boards {
+        boards.iter_mut().enumerate().for_each(|(idx, board)| {
             let found = board.extract(e);
             if found && !board.already_won && board.winning() {
                 board.already_won = true;
                 last_winner = board.calculate_score() * e;
+                last_board = Some(idx);
             }
-        }
+        });
     }
 
-    println!("Last winner score: {}", last_winner);
+    let last_board = &boards[last_board.unwrap()];
+    println!("Last winner score: {}\n{}\n", last_winner, last_board);
 }
 
 fn load_boards_and_inputs() -> (Vec<u64>, Vec<Board>) {
@@ -77,8 +85,8 @@ mod tests {
         let (extractions, boards) = load_boards_and_inputs();
         assert_eq!(extractions[0], 15);
 
-        assert_eq!(boards[0].at(0, 0).status(), (26, false));
+        assert_eq!(boards[0].at(0, 0).value, 26);
         assert_eq!(boards.len(), 100);
-        assert_eq!(boards.last().unwrap().at(0, 0).status(), (67, false));
+        assert_eq!(boards[99].at(0, 0).value, 67);
     }
 }
