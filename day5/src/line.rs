@@ -37,17 +37,9 @@ impl Line {
         self.start.x == self.end.x
     }
 
-    fn dx(&self) -> i64 {
-        (self.end.x - self.start.x).signum()
-    }
-
-    fn dy(&self) -> i64 {
-        (self.end.y - self.start.y).signum()
-    }
-
     pub fn coverage(&self) -> Vec<Point> {
-        let dx = self.dx();
-        let dy = self.dy();
+        let dx = (self.end.x - self.start.x).signum();
+        let dy = (self.end.y - self.start.y).signum();
 
         let mut tracer = Point::new(self.start.x, self.start.y);
         let mut output = vec![tracer];
