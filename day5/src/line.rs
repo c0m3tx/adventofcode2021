@@ -27,12 +27,10 @@ impl Line {
         Line { start, end }
     }
 
-    #[allow(dead_code)]
     pub fn is_horizontal(&self) -> bool {
         self.start.y == self.end.y
     }
 
-    #[allow(dead_code)]
     pub fn is_vertical(&self) -> bool {
         self.start.x == self.end.x
     }
