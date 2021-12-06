@@ -1,5 +1,5 @@
-pub mod fishes;
-pub use fishes::*;
+mod fishes;
+use fishes::*;
 
 fn load_input() -> [u64; 9] {
     let input = std::fs::read_to_string("input").expect("Unable to read file");
