@@ -1,28 +1,15 @@
-use std::collections::HashMap;
+use std::collections::HashSet;
 
 pub fn intersection(a: &str, b: &str) -> String {
-    let mut chars = a
-        .chars()
-        .chain(b.chars())
-        .fold(HashMap::new(), |mut map, c| {
-            let val = map.entry(c).or_insert(0u64);
-            *val += 1;
-
-            map
-        })
-        .iter()
-        .filter(|(_, &val)| val >= 2)
-        .map(|(k, _)| *k)
-        .collect::<Vec<char>>();
-    chars.sort();
-    chars.iter().collect()
+    let a_chars = a.chars().collect::<HashSet<_>>();
+    let b_chars = b.chars().collect::<HashSet<_>>();
+    a_chars.intersection(&b_chars).collect()
 }
 
 pub fn union(a: &str, b: &str) -> String {
-    let mut all_chars = a.chars().chain(b.chars()).collect::<Vec<char>>();
-    all_chars.sort();
-    all_chars.dedup();
-    all_chars.iter().collect()
+    let a_chars = a.chars().collect::<HashSet<_>>();
+    let b_chars = b.chars().collect::<HashSet<_>>();
+    a_chars.union(&b_chars).collect()
 }
 
 pub fn contains(container: &str, content: &str) -> bool {
@@ -30,7 +17,7 @@ pub fn contains(container: &str, content: &str) -> bool {
 }
 
 pub fn matches(a: &str, b: &str) -> bool {
-    a.len() == b.len() && a.chars().all(|a| b.chars().any(|b| a == b))
+    a.chars().collect::<HashSet<_>>() == b.chars().collect::<HashSet<_>>()
 }
 
 pub fn find<'a>(needle: &str, stack: &Vec<String>) -> String {
@@ -55,12 +42,16 @@ mod tests {
 
     #[test]
     fn test_union() {
-        assert_eq!(union("abc", "cde"), "abcde")
+        let result = union("abc", "cde");
+
+        assert!(matches(&result, "abcde"))
     }
 
     #[test]
     fn test_intersection() {
-        assert_eq!(intersection("dbca", "cde"), "cd")
+        let result = intersection("dbca", "cde");
+
+        assert!(matches(&result, "cd"))
     }
 
     #[test]
