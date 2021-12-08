@@ -33,19 +33,28 @@ pub fn associate_numbers(input: &Vec<String>) -> [String; 10] {
     out[3] = three(input, &out[1]);
     // "six" is a 6-length pattern which does not include the 1 pattern
     out[6] = six(input, &out[1]);
-    // "nine" is a 6-length pattern which includes 1 and 9 patterns
+    // "nine" is a 6-length pattern which includes 1 and 3 patterns
     out[9] = nine(input, &out[1], &out[3]);
     // "zero" is a 6-length pattern which includes 1 pattern but not 3
     out[0] = zero(input, &out[1], &out[3]);
     // "five" is a 5-length pattern which is included in 9 and is not 3
     out[5] = five(input, &out[3], &out[9]);
-    // "two" is a 5-length pattern which is neither a 3 nor a 5
+    // "two" is a 5-length pattern which is neither 3 nor 5
     out[2] = two(input, &out[3], &out[5]);
 
     out
 }
 
+fn find_by<F>(patterns: &Vec<String>, f: F) -> String
+where
+    F: Fn(&&String) -> bool,
+{
+    let result = patterns.iter().find(f).unwrap();
+    signal::find(&result, patterns)
+}
+
 fn three(patterns: &Vec<String>, one: &str) -> String {
+    // doesn't really matter which ones we select, since all three share the three middle leds
     let five_length_signals: Vec<&String> = patterns.iter().filter(|pat| pat.len() == 5).collect();
 
     let three = signal::union(
@@ -59,48 +68,33 @@ fn three(patterns: &Vec<String>, one: &str) -> String {
 }
 
 fn six(patterns: &Vec<String>, one: &str) -> String {
-    let six = patterns
-        .iter()
-        .find(|pat| pat.len() == 6 && !signal::contains(pat, one))
-        .unwrap();
-
-    signal::find(&six, patterns)
+    find_by(patterns, |pat| {
+        pat.len() == 6 && !signal::contains(pat, one)
+    })
 }
 
 fn nine(patterns: &Vec<String>, one: &str, three: &str) -> String {
-    let nine = patterns
-        .iter()
-        .find(|pat| pat.len() == 6 && signal::contains(pat, one) && signal::contains(pat, three))
-        .unwrap();
-
-    signal::find(&nine, patterns)
+    find_by(patterns, |pat| {
+        pat.len() == 6 && signal::contains(pat, one) && signal::contains(pat, three)
+    })
 }
 
 fn zero(patterns: &Vec<String>, one: &str, three: &str) -> String {
-    let zero = patterns
-        .iter()
-        .find(|pat| pat.len() == 6 && signal::contains(pat, one) && !signal::contains(pat, three))
-        .unwrap();
-
-    signal::find(&zero, patterns)
+    find_by(patterns, |pat| {
+        pat.len() == 6 && signal::contains(pat, one) && !signal::contains(pat, three)
+    })
 }
 
 fn five(patterns: &Vec<String>, three: &str, nine: &str) -> String {
-    let five = patterns
-        .iter()
-        .find(|pat| pat.len() == 5 && signal::contains(nine, pat) && !signal::matches(pat, three))
-        .unwrap();
-
-    signal::find(&five, patterns)
+    find_by(patterns, |pat| {
+        pat.len() == 5 && signal::contains(nine, pat) && !signal::matches(pat, three)
+    })
 }
 
 fn two(patterns: &Vec<String>, three: &str, five: &str) -> String {
-    let two = patterns
-        .iter()
-        .find(|pat| pat.len() == 5 && !signal::matches(pat, &three) && !signal::matches(pat, &five))
-        .unwrap();
-
-    signal::find(&two, patterns)
+    find_by(patterns, |pat| {
+        pat.len() == 5 && !signal::matches(pat, &three) && !signal::matches(pat, &five)
+    })
 }
 
 #[cfg(test)]
