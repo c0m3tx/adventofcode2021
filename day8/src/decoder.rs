@@ -21,26 +21,39 @@ pub fn digits(input: &Input) -> i64 {
 pub fn associate_numbers(input: &Vec<String>) -> [String; 10] {
     let mut out: [String; 10] = Default::default();
 
+    // "one" is the only 2-length pattern
     out[1] = signal::for_length(input, 2);
-    out[3] = three(input, &out[1]);
+    // "four" is the only 4-length pattern
     out[4] = signal::for_length(input, 4);
-    out[6] = six(input, &out[1]);
+    // "seven" is the only 3-length pattern
     out[7] = signal::for_length(input, 3);
+    // "eight" is the only 7-length pattern
     out[8] = signal::for_length(input, 7);
+    // "three" is the intersection of any pair of 5-length patterns (2, 3 or 5), merged with a 1
+    out[3] = three(input, &out[1]);
+    // "six" is a 6-length pattern which does not include the 1 pattern
+    out[6] = six(input, &out[1]);
+    // "nine" is a 6-length pattern which includes 1 and 9 patterns
     out[9] = nine(input, &out[1], &out[3]);
+    // "zero" is a 6-length pattern which includes 1 pattern but not 3
     out[0] = zero(input, &out[1], &out[3]);
+    // "five" is a 5-length pattern which is included in 9 and is not 3
     out[5] = five(input, &out[3], &out[9]);
+    // "two" is a 5-length pattern which is neither a 3 nor a 5
     out[2] = two(input, &out[3], &out[5]);
 
     out
 }
 
 fn three(patterns: &Vec<String>, one: &str) -> String {
-    let two_five: Vec<&String> = patterns.iter().filter(|pat| pat.len() == 5).collect();
+    let five_length_signals: Vec<&String> = patterns.iter().filter(|pat| pat.len() == 5).collect();
 
     let three = signal::union(
         one,
-        &signal::intersection(two_five[0].as_str(), two_five[1].as_str()),
+        &signal::intersection(
+            five_length_signals[0].as_str(),
+            five_length_signals[1].as_str(),
+        ),
     );
     signal::find(&three, patterns)
 }
