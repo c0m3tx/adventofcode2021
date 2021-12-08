@@ -18,7 +18,7 @@ pub fn digits(input: &Input) -> i64 {
         .unwrap()
 }
 
-pub fn associate_numbers(input: &Vec<String>) -> [String; 10] {
+fn associate_numbers(input: &Vec<String>) -> [String; 10] {
     let mut out: [String; 10] = Default::default();
 
     // "one" is the only 2-length pattern
