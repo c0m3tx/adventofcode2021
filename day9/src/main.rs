@@ -1,5 +1,3 @@
-use std::ops::Mul;
-
 struct Cell {
     value: i64,
     visited: bool,
@@ -155,8 +153,8 @@ mod tests {
     #[test]
     fn test_visit() {
         let mut input = parse_input("2199943210\n3987894921\n9856789892\n8767896789\n9899965678");
-        let visit = input.visit(1, 0);
-        assert_eq!(visit, 3);
+        let visit = input.visit(2, 2);
+        assert_eq!(visit, 14);
     }
 
     #[test]
