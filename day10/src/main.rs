@@ -61,10 +61,10 @@ fn parse_line(input: &str) -> Result<Vec<Bracket>, Bracket> {
     let mut stack = vec![];
 
     macro_rules! op {
-        (open $bracket:expr) => {
+        (open $bracket:path) => {
             stack.push($bracket)
         };
-        (close $bracket:expr) => {
+        (close $bracket:path) => {
             if stack.pop() != Some($bracket) {
                 return Err($bracket);
             }
