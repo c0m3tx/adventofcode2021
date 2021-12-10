@@ -172,7 +172,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "day6"
+name = "day06"
 version = "0.1.0"
 dependencies = [
  "criterion",
