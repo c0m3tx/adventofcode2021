@@ -6,25 +6,21 @@ enum Bracket {
     Angled,
 }
 
+macro_rules! scores {
+    ($self:expr, $($bracket:path => $value:expr),*) => {{
+        match $self {
+            $($bracket => $value),*
+        }
+    }};
+}
+
 impl Bracket {
     fn corruption_value(&self) -> u64 {
-        use Bracket::*;
-        match self {
-            Round => 3,
-            Square => 57,
-            Curly => 1197,
-            Angled => 25137,
-        }
+        scores!(self, Bracket::Round => 3, Bracket::Square => 57, Bracket::Curly => 1197, Bracket::Angled => 25137)
     }
 
     fn completion_value(&self) -> u64 {
-        use Bracket::*;
-        match self {
-            Round => 1,
-            Square => 2,
-            Curly => 3,
-            Angled => 4,
-        }
+        scores!(self, Bracket::Round => 1, Bracket::Square => 2, Bracket::Curly => 3, Bracket::Angled => 4)
     }
 }
 
