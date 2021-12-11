@@ -89,12 +89,11 @@ fn parse_input() -> [i32; 100] {
     let mut output = [0; 100];
     std::fs::read_to_string("input")
         .expect("Could not read input file")
-        .lines()
-        .flat_map(|line| line.trim().split("").map(|s| s.parse::<i32>()))
-        .filter_map(|x| x.ok())
-        .take(100)
+        .chars()
+        .filter_map(|c| c.to_digit(10))
         .enumerate()
-        .for_each(|(i, n)| output[i] = n);
+        .for_each(|(i, n)| output[i] = n as i32);
+
     output
 }
 
