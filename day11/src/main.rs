@@ -1,3 +1,6 @@
+// sentinel value for explosions
+const EXPLODED: i32 = 100;
+
 fn main() {
     let input = parse_input();
     let total_explosions = part_1(input, 100);
@@ -6,7 +9,7 @@ fn main() {
     println!("Part 2: {}", full_blast_iteration);
 }
 
-fn neighbors_coords((x, y): (i32, i32)) -> Vec<(i32, i32)> {
+fn neighbors_of((x, y): (i32, i32)) -> Vec<(i32, i32)> {
     (-1..=1)
         .flat_map(|dx| (-1..=1).map(move |dy| (x + dx, y + dy)))
         .filter(|&(px, py)| px != x || py != y)
@@ -23,38 +26,31 @@ fn coords(i: usize) -> (i32, i32) {
 }
 
 fn step(array: [i32; 100]) -> ([i32; 100], i32) {
-    let mut array = array.clone();
+    let mut array = array;
     // increment all by one
-    for i in 0..100 {
-        array[i] += 1;
-    }
+    array.iter_mut().for_each(|x| *x += 1);
 
-    loop {
-        let mut changed = false;
+    let mut changed = true;
+    while changed {
+        changed = false;
         for i in 0..100 {
-            if array[i] > 9 && array[i] < 500 {
+            if array[i] > 9 && array[i] < EXPLODED {
                 // this should explode
-                let co = coords(i);
-                array[i] += 500;
-                neighbors_coords(co).iter().for_each(|&(x, y)| {
-                    array[index((x, y))] += 1;
+                let me = coords(i);
+                array[i] += EXPLODED;
+                neighbors_of(me).iter().for_each(|&neighbor| {
+                    array[index(neighbor)] += 1;
                 });
                 changed = true;
             }
         }
-        if !changed {
-            // no more explosions!
-            break;
-        }
     }
 
     let mut explosions = 0;
-    for i in 0..100 {
-        if array[i] >= 500 {
-            array[i] = 0;
-            explosions += 1;
-        }
-    }
+    array.iter_mut().filter(|x| **x >= EXPLODED).for_each(|x| {
+        *x = 0;
+        explosions += 1;
+    });
 
     (array, explosions)
 }
@@ -181,9 +177,9 @@ mod tests {
 
     #[test]
     fn test_neighbors() {
-        assert_eq!(neighbors_coords((0, 0)).len(), 3);
-        assert_eq!(neighbors_coords((9, 9)).len(), 3);
-        assert_eq!(neighbors_coords((5, 9)).len(), 5);
-        assert_eq!(neighbors_coords((5, 5)).len(), 8);
+        assert_eq!(neighbors_of((0, 0)).len(), 3);
+        assert_eq!(neighbors_of((9, 9)).len(), 3);
+        assert_eq!(neighbors_of((5, 9)).len(), 5);
+        assert_eq!(neighbors_of((5, 5)).len(), 8);
     }
 }
