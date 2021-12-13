@@ -4,7 +4,7 @@ use sparse_matrix::SparseMatrix;
 
 use std::collections::HashSet;
 
-struct Fold {
+pub struct Fold {
     direction: char,
     position: i64,
 }
@@ -16,8 +16,6 @@ fn parse_input() -> (SparseMatrix, Vec<Fold>) {
 
             pub rule coords() -> (i64, i64) = x:number() "," y:number() { (x, y) }
             pub rule fold() -> Fold = "fold along " d:$(['x' | 'y']) "=" x:number() { Fold{direction: d.chars().next().unwrap(), position: x} }
-
-            // pub rule line() -> Box<Input> = fold_horizontal() / fold_vertical() / coords()
         }
     };
 
