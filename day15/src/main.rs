@@ -1,7 +1,6 @@
 struct Tile {
     risk: u32,
     min_risk: u32,
-    visited: bool,
 }
 
 impl From<u32> for Tile {
@@ -15,7 +14,6 @@ impl Tile {
         Self {
             risk,
             min_risk: u32::MAX,
-            visited: false,
         }
     }
 }
@@ -37,7 +35,6 @@ impl Cavemap {
         self.get_mut(0, 0).min_risk = 0;
         let mut tiles_to_visit = vec![(0, 0)];
         while let Some((x, y)) = dequeue(&mut tiles_to_visit) {
-            self.get_mut(x, y).visited = true;
             self.neighbors(x, y).into_iter().for_each(|(nx, ny)| {
                 let move_risk = self.get(nx, ny).risk + self.get(x, y).min_risk;
                 let current_min_risk = self.get(nx, ny).min_risk;
@@ -74,13 +71,6 @@ impl Cavemap {
             neighbors.push((x, y + 1));
         }
         neighbors
-    }
-
-    fn unvisited_neighbors(&self, x: i64, y: i64) -> Vec<(i64, i64)> {
-        self.neighbors(x, y)
-            .into_iter()
-            .filter(|(nx, ny)| !self.get(*nx, *ny).visited)
-            .collect()
     }
 
     fn width(&self) -> usize {
@@ -171,15 +161,27 @@ mod tests {
     }
 
     #[test]
+    fn test_part_2() {
+        let result = part_2();
+
+        assert_eq!(result, 2821);
+    }
+
+    #[test]
     fn test_multiply() {
         let input = "12\n89";
-        let cave = parse_input(input);
-        let mut cave = cave.multiply(3);
+        let cave = parse_input(input).multiply(3);
         let output: Vec<Vec<u32>> = cave
             .map
             .iter()
             .map(|row| row.iter().map(|tile| tile.risk).collect())
             .collect();
-        output.iter().for_each(|row| println!("{:?}", row));
+
+        assert_eq!(output[0], vec![1, 2, 2, 3, 3, 4]);
+        assert_eq!(output[1], vec![8, 9, 9, 1, 1, 2]);
+        assert_eq!(output[2], vec![2, 3, 3, 4, 4, 5]);
+        assert_eq!(output[3], vec![9, 1, 1, 2, 2, 3]);
+        assert_eq!(output[4], vec![3, 4, 4, 5, 5, 6]);
+        assert_eq!(output[5], vec![1, 2, 2, 3, 3, 4]);
     }
 }
