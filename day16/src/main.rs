@@ -7,10 +7,12 @@ use packet::*;
 use utils::*;
 
 fn main() {
-    part_1();
+    let packet = parse();
+    println!("Part 1: {:?}", packet.version_sum());
+    println!("Part 1: {:?}", packet.execute());
 }
 
-fn part_1() -> Box<dyn Packet> {
+fn parse() -> Box<dyn Packet> {
     let input = std::fs::read_to_string("input").expect("Unable to read input");
     let binary = from_hex(&input);
     match packet_type(&binary, 0) {
@@ -25,7 +27,13 @@ mod tests {
 
     #[test]
     fn test_part_1() {
-        let packet = part_1();
+        let packet = parse();
         assert_eq!(packet.version_sum(), 886);
+    }
+
+    #[test]
+    fn test_part_2() {
+        let packet = parse();
+        assert_eq!(packet.execute(), 184487454837);
     }
 }
