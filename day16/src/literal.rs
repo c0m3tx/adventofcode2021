@@ -13,12 +13,8 @@ impl Literal {
 }
 
 impl Packet for Literal {
-    fn version(&self) -> u64 {
-        self.version as u64
-    }
-
     fn version_sum(&self) -> u64 {
-        self.version()
+        self.version as u64
     }
 
     fn execute(&self) -> u64 {
@@ -28,13 +24,12 @@ impl Packet for Literal {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::parsers::literal;
     #[test]
     fn test_literal() {
         let input = "110100101111111000101000".to_owned();
         let (result, offset) = literal(&input, 0).unwrap();
-        assert_eq!(result.version(), 0b110);
+        assert_eq!(result.version, 0b110);
         assert_eq!(result.value, 2021);
         assert_eq!(offset, 21);
     }

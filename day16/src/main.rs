@@ -9,7 +9,7 @@ use utils::*;
 fn main() {
     let packet = parse();
     println!("Part 1: {:?}", packet.version_sum());
-    println!("Part 1: {:?}", packet.execute());
+    println!("Part 2: {:?}", packet.execute());
 }
 
 fn parse() -> Box<dyn Packet> {

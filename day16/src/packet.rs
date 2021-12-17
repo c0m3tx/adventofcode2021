@@ -6,7 +6,6 @@ pub enum PacketType {
 }
 
 pub trait Packet {
-    fn version(&self) -> u64;
     fn version_sum(&self) -> u64;
     fn execute(&self) -> u64;
 }
