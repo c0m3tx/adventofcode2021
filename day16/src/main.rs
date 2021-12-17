@@ -85,48 +85,50 @@ fn string_to_u64(s: &str) -> u64 {
     result
 }
 
-impl Bits {
-    fn at(&self, pos: usize) -> u8 {
-        match self.bits.chars().nth(pos) {
-            Some('0') => 0,
-            Some('1') => 1,
-            _ => panic!("Not a number?"),
-        }
-    }
-
-    fn range_u64(&self, range: Range<usize>) -> u64 {
-        let mut value: u64 = 0;
-        range.rev().enumerate().for_each(|(i, pos)| {
-            value += (self.at(pos) as u64) << i;
-        });
-
-        value
-    }
+fn from_hex(hex: &str) -> String {
+    hex.chars()
+        .map(|x| x.to_digit(16).unwrap() as u8)
+        .map(|x| format!("{:04b}", x))
+        .collect::<String>()
 }
 
-const OPERATOR: u64 = 0;
+fn at(bits: &str, pos: usize) -> u8 {
+    bits.chars()
+        .nth(pos)
+        .and_then(|f| f.to_digit(2).map(|d| d as u8))
+        .unwrap()
+}
 
-fn packet_type(input: &Bits, start: usize) -> PacketType {
-    match input.range_u64((start + 3)..(start + 6)) {
+fn range_u64(bits: &str, range: Range<usize>) -> u64 {
+    let mut value: u64 = 0;
+    range.rev().enumerate().for_each(|(i, pos)| {
+        value += (at(bits, pos) as u64) << i;
+    });
+
+    value
+}
+
+fn packet_type(input: &str, start: usize) -> PacketType {
+    match range_u64(&input, (start + 3)..(start + 6)) {
         4 => PacketType::Literal,
         x => PacketType::Operator(x),
     }
 }
 
-fn literal(input: &Bits, start: usize) -> Result<(Literal, usize), String> {
-    let package_type = input.range_u64((start + 3)..(start + 6));
+fn literal(input: &str, start: usize) -> Result<(Literal, usize), String> {
+    let package_type = range_u64(input, (start + 3)..(start + 6));
     if package_type != 4 {
         return Err("Not a literal".to_string());
     }
-    let version = input.range_u64(start..(start + 3)) as u8;
+    let version = range_u64(input, start..(start + 3)) as u8;
     let mut position = start + 6;
     let mut output = String::default();
     loop {
         for i in 1..5 {
-            output.push(input.bits.chars().nth(position + i).unwrap());
+            output.push(input.chars().nth(position + i).unwrap());
         }
 
-        if input.at(position) == 0 {
+        if at(input, position) == 0 {
             break;
         }
         position += 5;
@@ -138,43 +140,40 @@ fn literal(input: &Bits, start: usize) -> Result<(Literal, usize), String> {
     Ok((result, position + 5))
 }
 
-fn operator(input: &Bits, start: usize) -> Result<(Operator, usize), String> {
+fn operator(input: &str, start: usize) -> Result<(Operator, usize), String> {
     let package_type = packet_type(&input, start);
     if let PacketType::Literal = package_type {
         return Err("Not an operator".to_string());
     }
-    let version = input.range_u64(start..(start + 3)) as u8;
+    let version = range_u64(input, start..(start + 3)) as u8;
 
-    if input.at(start + 6) == 0 {
-        let length = input.range_u64((start + 7)..(start + 22)) as usize;
-        let subset = input.bits[(start + 22)..(start + 22 + length)].to_string();
+    if at(input, start + 6) == 0 {
+        let length = range_u64(input, (start + 7)..(start + 22)) as usize;
+        let subset = input[(start + 22)..(start + 22 + length)].to_string();
         let subpackets = load_all_subpackets(subset);
         let offset = start + length + 22;
         Ok((Operator::new(version, subpackets), offset))
     } else {
-        let packets_count = input.range_u64((start + 7)..(start + 18));
-        let (subpackets, offset) = load_n_subpackets(&input, start + 18, packets_count);
+        let packets_count = range_u64(input, (start + 7)..(start + 18));
+        let (subpackets, offset) = load_n_subpackets(input, start + 18, packets_count);
         Ok((Operator::new(version, subpackets), offset))
     }
 }
 
 fn load_all_subpackets(input: String) -> Vec<Box<dyn Packet>> {
-    let bits = Bits {
-        bits: input.clone(),
-    };
     let mut subpackets: Vec<Box<dyn Packet>> = Vec::new();
     let mut position = 0;
     loop {
-        let packet_type = packet_type(&bits, position);
+        let packet_type = packet_type(&input, position);
 
         match packet_type {
             PacketType::Literal => {
-                let (literal, offset) = literal(&bits, position).unwrap();
+                let (literal, offset) = literal(&input, position).unwrap();
                 subpackets.push(Box::new(literal));
                 position = offset;
             }
             PacketType::Operator(_) => {
-                let (operator, offset) = operator(&bits, position).unwrap();
+                let (operator, offset) = operator(&input, position).unwrap();
                 subpackets.push(Box::new(operator));
                 position = offset;
             }
@@ -187,19 +186,19 @@ fn load_all_subpackets(input: String) -> Vec<Box<dyn Packet>> {
     subpackets
 }
 
-fn load_n_subpackets(bits: &Bits, start: usize, count: u64) -> (Vec<Box<dyn Packet>>, usize) {
+fn load_n_subpackets(input: &str, start: usize, count: u64) -> (Vec<Box<dyn Packet>>, usize) {
     let mut position = start;
     let mut subpackets: Vec<Box<dyn Packet>> = vec![];
     for _ in 0..count {
-        let packet_type = packet_type(&bits, position);
+        let packet_type = packet_type(input, position);
         match packet_type {
             PacketType::Literal => {
-                let (literal, offset) = literal(&bits, position).unwrap();
+                let (literal, offset) = literal(input, position).unwrap();
                 subpackets.push(Box::new(literal));
                 position = offset;
             }
             PacketType::Operator(_) => {
-                let (operator, offset) = operator(&bits, position).unwrap();
+                let (operator, offset) = operator(input, position).unwrap();
                 subpackets.push(Box::new(operator));
                 position = offset;
             }
@@ -215,7 +214,7 @@ fn main() {
 
 fn part_1() -> Box<dyn Packet> {
     let input = std::fs::read_to_string("input").expect("Unable to read input");
-    let binary = Bits::from(input);
+    let binary = from_hex(&input);
     match packet_type(&binary, 0) {
         PacketType::Literal => {
             let (packet, _) = literal(&binary, 0).unwrap();
@@ -242,9 +241,7 @@ mod tests {
 
     #[test]
     fn test_literal() {
-        let input = Bits {
-            bits: "110100101111111000101000".to_owned(),
-        };
+        let input = "110100101111111000101000".to_owned();
         let (result, offset) = literal(&input, 0).unwrap();
         assert_eq!(
             result,
@@ -258,9 +255,7 @@ mod tests {
 
     #[test]
     fn test_operator_type_0() {
-        let input = Bits {
-            bits: "00111000000000000110111101000101001010010001001000000000".to_owned(),
-        };
+        let input = "00111000000000000110111101000101001010010001001000000000".to_owned();
         let (result, offset) = operator(&input, 0).unwrap();
         assert_eq!(result.version(), 1);
         assert_eq!(result.subpackets.len(), 2);
@@ -271,9 +266,7 @@ mod tests {
 
     #[test]
     fn test_operator_type_1() {
-        let input = Bits {
-            bits: "11101110000000001101010000001100100000100011000001100000".to_owned(),
-        };
+        let input = "11101110000000001101010000001100100000100011000001100000".to_owned();
         let (result, offset) = operator(&input, 0).unwrap();
         assert_eq!(result.version(), 7);
         assert_eq!(result.subpackets.len(), 3);
@@ -292,6 +285,6 @@ mod tests {
     #[test]
     fn test_part_1() {
         let packet = part_1();
-        assert_eq!(packet.version_sum(), 10);
+        assert_eq!(packet.version_sum(), 886);
     }
 }
