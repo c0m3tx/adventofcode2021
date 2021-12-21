@@ -63,13 +63,7 @@ impl State {
             }
         }
 
-        let infinite_status = if self.infinite_status == false && algorithm.contains(&0) {
-            true
-        } else if self.infinite_status == true && !algorithm.contains(&511) {
-            false
-        } else {
-            self.infinite_status
-        };
+        let infinite_status = !self.infinite_status && algorithm.contains(&0);
 
         State {
             data,
@@ -78,11 +72,6 @@ impl State {
             range_y,
         }
     }
-}
-
-fn main() {
-    part_1();
-    part_2();
 }
 
 fn parse_input(input: &str) -> (Algorithm, State) {
@@ -122,7 +111,12 @@ fn parse_input(input: &str) -> (Algorithm, State) {
     )
 }
 
-fn part_1() {
+fn main() {
+    println!("Part 1: {}", part_1());
+    println!("Part 2: {}", part_2());
+}
+
+fn part_1() -> usize {
     let input = std::fs::read_to_string("input").expect("Unable to read file");
     let (algorithm, state) = parse_input(&input);
     let mut state = state;
@@ -130,10 +124,10 @@ fn part_1() {
         state = state.apply(&algorithm);
     }
 
-    println!("{}", state.data.len());
+    state.data.len()
 }
 
-fn part_2() {
+fn part_2() -> usize {
     let input = std::fs::read_to_string("input").expect("Unable to read file");
     let (algorithm, state) = parse_input(&input);
     let mut state = state;
@@ -141,8 +135,7 @@ fn part_2() {
         state = state.apply(&algorithm);
     }
 
-    println!("{}", state.data.len());
-    state.print();
+    state.data.len()
 }
 
 #[cfg(test)]
@@ -151,10 +144,6 @@ mod tests {
 
     fn test_input() -> (Algorithm, State) {
         parse_input("..#.#..#####.#.#.#.###.##.....###.##.#..###.####..#####..#....#..#..##..###..######.###...####..#..#####..##..#.#####...##.#.#..#.##..#.#......#.###.######.###.####...#.##.##..#..#..#####.....#.#....###..#.##......#.....#..#..#..##..#...##.######.####.####.#.#...#.......#..#.#.#...####.##.#......#..#...##.#.##..#...##.#.##..###.#......#.#.......#.#.#.####.###.##...#.....####.#..#..#.##.#....##..#.####....##...##..#...#......#.#.......#.......##..####..#...#.#.#...##..#.#..###..#####........#..####......#..#\n\n#..#.\n#....\n##..#\n..#..\n..###")
-    }
-
-    fn test_true_input() -> (Algorithm, State) {
-        parse_input(&std::fs::read_to_string("input").expect("Unable to read file"))
     }
 
     #[test]
@@ -183,11 +172,9 @@ mod tests {
 
     #[test]
     fn test_apply() {
-        let (algo, state) = test_true_input();
+        let (algo, state) = test_input();
         let state = state.apply(&algo);
-        state.print();
         let state = state.apply(&algo);
-        state.print();
 
         assert_eq!(state.data.len(), 35)
     }
@@ -199,6 +186,6 @@ mod tests {
 
     #[test]
     fn test_part_2() {
-        part_2();
+        assert_eq!(part_2(), 18502)
     }
 }
